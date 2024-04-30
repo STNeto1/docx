@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 )
@@ -22,7 +22,7 @@ func loadFile(file string) *Docx {
 }
 
 func loadFromMemory(file string) *Docx {
-	data, _ := ioutil.ReadFile(file)
+	data, _ := os.ReadFile(file)
 	r, err := ReadDocxFromMemory(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		panic(err)
@@ -43,13 +43,13 @@ func loadFromFs(file string) *Docx {
 	return r.Editable()
 }
 
-//Tests that we are able to load a file from a filesystem and do a quick replacement test
+// Tests that we are able to load a file from a filesystem and do a quick replacement test
 func TestReadDocxFromFS(t *testing.T) {
 	d := loadFromFs(testFile)
 	simpleReplacementTest(d, t)
 }
 
-//Tests that we are able to load a file from a memory array of bytes
+// Tests that we are able to load a file from a memory array of bytes
 func TestReadDocxFromMemory(t *testing.T) {
 	d := loadFromMemory(testFile)
 	simpleReplacementTest(d, t)

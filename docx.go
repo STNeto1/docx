@@ -9,18 +9,17 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"strings"
 )
 
-//Contains functions to work with data from a zip file
+// Contains functions to work with data from a zip file
 type ZipData interface {
 	files() []*zip.File
 	close() error
 }
 
-//Type for in memory zip files
+// Type for in memory zip files
 type ZipInMemory struct {
 	data *zip.Reader
 }
@@ -29,13 +28,13 @@ func (d ZipInMemory) files() []*zip.File {
 	return d.data.File
 }
 
-//Since there is nothing to close for in memory, just nil the data and return nil
+// Since there is nothing to close for in memory, just nil the data and return nil
 func (d ZipInMemory) close() error {
 	d.data = nil
 	return nil
 }
 
-//Type for zip files read from disk
+// Type for zip files read from disk
 type ZipFile struct {
 	data *zip.ReadCloser
 }
@@ -83,6 +82,16 @@ type Docx struct {
 
 func (d *Docx) GetContent() string {
 	return d.content
+}
+
+func (d *Docx) GetFooters() []string {
+	result := make([]string, len(d.footers))
+
+	for _, value := range d.footers {
+		result = append(result, value)
+	}
+
+	return result
 }
 
 func (d *Docx) SetContent(content string) {
@@ -194,7 +203,7 @@ func replaceHeaderFooter(headerFooter map[string]string, oldString string, newSt
 	return nil
 }
 
-//ReadDocxFromFS opens a docx file from the file system
+// ReadDocxFromFS opens a docx file from the file system
 func ReadDocxFromFS(file string, fs fs.FS) (*ReplaceDocx, error) {
 	f, err := fs.Open(file)
 	if err != nil {
@@ -327,7 +336,7 @@ func readLinks(files []*zip.File) (text string, err error) {
 }
 
 func wordDocToString(reader io.Reader) (string, error) {
-	b, err := ioutil.ReadAll(reader)
+	b, err := io.ReadAll(reader)
 	if err != nil {
 		return "", err
 	}
