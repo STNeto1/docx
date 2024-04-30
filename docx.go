@@ -48,46 +48,46 @@ func (d ZipFile) close() error {
 }
 
 type ReplaceDocx struct {
-	zipReader ZipData
-	content   string
-	links     string
-	headers   map[string]string
-	footers   map[string]string
-	images    map[string]string
+	ZipReader ZipData
+	Content   string
+	Links     string
+	Headers   map[string]string
+	Footers   map[string]string
+	Images    map[string]string
 }
 
 func (r *ReplaceDocx) Editable() *Docx {
 	return &Docx{
-		files:   r.zipReader.files(),
-		content: r.content,
-		links:   r.links,
-		headers: r.headers,
-		footers: r.footers,
-		images:  r.images,
+		Files:   r.ZipReader.files(),
+		Content: r.Content,
+		Links:   r.Links,
+		Headers: r.Headers,
+		Footers: r.Footers,
+		Images:  r.Images,
 	}
 }
 
 func (r *ReplaceDocx) Close() error {
-	return r.zipReader.close()
+	return r.ZipReader.close()
 }
 
 type Docx struct {
-	files   []*zip.File
-	content string
-	links   string
-	headers map[string]string
-	footers map[string]string
-	images  map[string]string
+	Files   []*zip.File
+	Content string
+	Links   string
+	Headers map[string]string
+	Footers map[string]string
+	Images  map[string]string
 }
 
 func (d *Docx) GetContent() string {
-	return d.content
+	return d.Content
 }
 
 func (d *Docx) GetFooters() []string {
-	result := make([]string, len(d.footers))
+	result := make([]string, len(d.Footers))
 
-	for _, value := range d.footers {
+	for _, value := range d.Footers {
 		result = append(result, value)
 	}
 
@@ -95,11 +95,11 @@ func (d *Docx) GetFooters() []string {
 }
 
 func (d *Docx) SetContent(content string) {
-	d.content = content
+	d.Content = content
 }
 
 func (d *Docx) ReplaceRaw(oldString string, newString string, num int) {
-	d.content = strings.Replace(d.content, oldString, newString, num)
+	d.Content = strings.Replace(d.Content, oldString, newString, num)
 }
 
 func (d *Docx) Replace(oldString string, newString string, num int) (err error) {
@@ -111,7 +111,7 @@ func (d *Docx) Replace(oldString string, newString string, num int) (err error) 
 	if err != nil {
 		return err
 	}
-	d.content = strings.Replace(d.content, oldString, newString, num)
+	d.Content = strings.Replace(d.Content, oldString, newString, num)
 
 	return nil
 }
@@ -125,17 +125,17 @@ func (d *Docx) ReplaceLink(oldString string, newString string, num int) (err err
 	if err != nil {
 		return err
 	}
-	d.links = strings.Replace(d.links, oldString, newString, num)
+	d.Links = strings.Replace(d.Links, oldString, newString, num)
 
 	return nil
 }
 
 func (d *Docx) ReplaceHeader(oldString string, newString string) (err error) {
-	return replaceHeaderFooter(d.headers, oldString, newString)
+	return replaceHeaderFooter(d.Headers, oldString, newString)
 }
 
 func (d *Docx) ReplaceFooter(oldString string, newString string) (err error) {
-	return replaceHeaderFooter(d.footers, oldString, newString)
+	return replaceHeaderFooter(d.Footers, oldString, newString)
 }
 
 func (d *Docx) WriteToFile(path string) (err error) {
@@ -151,7 +151,7 @@ func (d *Docx) WriteToFile(path string) (err error) {
 
 func (d *Docx) Write(ioWriter io.Writer) (err error) {
 	w := zip.NewWriter(ioWriter)
-	for _, file := range d.files {
+	for _, file := range d.Files {
 		var writer io.Writer
 		var readCloser io.ReadCloser
 
@@ -164,15 +164,15 @@ func (d *Docx) Write(ioWriter io.Writer) (err error) {
 			return err
 		}
 		if file.Name == "word/document.xml" {
-			writer.Write([]byte(d.content))
+			writer.Write([]byte(d.Content))
 		} else if file.Name == "word/_rels/document.xml.rels" {
-			writer.Write([]byte(d.links))
-		} else if strings.Contains(file.Name, "header") && d.headers[file.Name] != "" {
-			writer.Write([]byte(d.headers[file.Name]))
-		} else if strings.Contains(file.Name, "footer") && d.footers[file.Name] != "" {
-			writer.Write([]byte(d.footers[file.Name]))
-		} else if strings.HasPrefix(file.Name, "word/media/") && d.images[file.Name] != "" {
-			newImage, err := os.Open(d.images[file.Name])
+			writer.Write([]byte(d.Links))
+		} else if strings.Contains(file.Name, "header") && d.Headers[file.Name] != "" {
+			writer.Write([]byte(d.Headers[file.Name]))
+		} else if strings.Contains(file.Name, "footer") && d.Footers[file.Name] != "" {
+			writer.Write([]byte(d.Footers[file.Name]))
+		} else if strings.HasPrefix(file.Name, "word/media/") && d.Images[file.Name] != "" {
+			newImage, err := os.Open(d.Images[file.Name])
 			if err != nil {
 				return err
 			}
@@ -249,7 +249,7 @@ func ReadDocx(reader ZipData) (*ReplaceDocx, error) {
 
 	headers, footers, _ := readHeaderFooter(reader.files())
 	images, _ := retrieveImageFilenames(reader.files())
-	return &ReplaceDocx{zipReader: reader, content: content, links: links, headers: headers, footers: footers, images: images}, nil
+	return &ReplaceDocx{ZipReader: reader, Content: content, Links: links, Headers: headers, Footers: footers, Images: images}, nil
 }
 
 func retrieveImageFilenames(files []*zip.File) (map[string]string, error) {
@@ -412,13 +412,13 @@ func encode(s string) (string, error) {
 }
 
 func (d *Docx) ReplaceImage(oldImage string, newImage string) (err error) {
-	if _, ok := d.images[oldImage]; ok {
-		d.images[oldImage] = newImage
+	if _, ok := d.Images[oldImage]; ok {
+		d.Images[oldImage] = newImage
 		return nil
 	}
 	return fmt.Errorf("old image: %q, file not found", oldImage)
 }
 
 func (d *Docx) ImagesLen() int {
-	return len(d.images)
+	return len(d.Images)
 }
